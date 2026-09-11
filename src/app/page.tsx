@@ -1,76 +1,38 @@
-const creators = [
-  { name: "LowKey Dre", city: "West End", tier: "$7/mo", stat: "2.4K" },
-  { name: "ATL Moe", city: "College Park", tier: "$10/mo", stat: "1.8K" },
-  { name: "Jae Loose", city: "East Point", tier: "$5/mo", stat: "3.1K" },
+'use client';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import type { Session } from '@supabase/supabase-js';
+
+type Creator={id:string;display_name:string;handle:string;city:string;bio:string;is_creator:boolean};
+type Post={id:string;creator_id:string;caption:string;media_url:string|null;media_type:string;visibility:string;created_at:string};
+const demo=[
+ {id:'d1',display_name:'LowKey Dre',handle:'lowkeydre',city:'West End',bio:'Streetwear fits and ATL drops.',is_creator:true},
+ {id:'d2',display_name:'ATL Moe',handle:'atlmoe',city:'College Park',bio:'Everyday low-rise style.',is_creator:true},
+ {id:'d3',display_name:'Jae Loose',handle:'jaeloose',city:'East Point',bio:'Fits, sneakers and city scenes.',is_creator:true},
 ];
-
-export default function Home() {
-  return (
-    <main className="min-h-screen bg-zinc-950 text-white">
-      <section className="mx-auto max-w-6xl px-6 py-8">
-        <nav className="flex items-center justify-between border-b border-white/10 pb-5">
-          <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-lime-300">Atlanta creator culture</p>
-            <h1 className="text-2xl font-black">SAG FOR CASH</h1>
-          </div>
-          <div className="flex gap-3 text-sm">
-            <button className="rounded-full border border-white/20 px-4 py-2">Log in</button>
-            <button className="rounded-full bg-lime-300 px-4 py-2 font-bold text-black">Join free</button>
-          </div>
-        </nav>
-
-        <div className="grid gap-10 py-16 md:grid-cols-[1.2fr_.8fr] md:items-center">
-          <div>
-            <span className="rounded-full border border-lime-300/30 bg-lime-300/10 px-3 py-1 text-xs font-semibold text-lime-200">18+ CREATOR MARKETPLACE</span>
-            <h2 className="mt-6 max-w-3xl text-5xl font-black leading-none md:text-7xl">Turn the low-rider look into a real creator hustle.</h2>
-            <p className="mt-6 max-w-2xl text-lg text-zinc-300">Post the fit. Build a following. Unlock premium drops, tips, and paid custom photo or video requests without losing the streetwear identity.</p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <button className="rounded-2xl bg-lime-300 px-6 py-3 font-black text-black">Create profile</button>
-              <button className="rounded-2xl border border-white/20 px-6 py-3 font-bold">Browse creators</button>
-            </div>
-          </div>
-
-          <div className="rounded-3xl border border-white/10 bg-zinc-900 p-5 shadow-2xl">
-            <div className="aspect-[4/5] rounded-2xl bg-gradient-to-br from-zinc-700 via-zinc-900 to-black p-5">
-              <div className="flex h-full flex-col justify-between">
-                <div className="flex justify-between text-xs text-zinc-300"><span>FEATURED DROP</span><span>ATL</span></div>
-                <div>
-                  <p className="text-3xl font-black">West End Night Fit</p>
-                  <p className="mt-2 text-sm text-zinc-300">Public preview • Premium set locked</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <section className="pb-16">
-          <div className="mb-6 flex items-end justify-between">
-            <div><p className="text-sm uppercase tracking-[0.3em] text-zinc-400">Trending</p><h3 className="text-3xl font-black">Atlanta creators</h3></div>
-            <span className="text-sm text-zinc-400">Free + premium</span>
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {creators.map((creator) => (
-              <article key={creator.name} className="rounded-3xl border border-white/10 bg-zinc-900 p-5">
-                <div className="aspect-square rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-700" />
-                <div className="mt-4 flex items-start justify-between gap-4">
-                  <div><h4 className="text-xl font-black">{creator.name}</h4><p className="text-sm text-zinc-400">{creator.city} • {creator.stat} likes</p></div>
-                  <span className="rounded-full bg-white/10 px-3 py-1 text-xs">{creator.tier}</span>
-                </div>
-                <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                  <button className="rounded-xl border border-white/10 px-3 py-2">Follow</button>
-                  <button className="rounded-xl bg-lime-300 px-3 py-2 font-bold text-black">Unlock</button>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="grid gap-4 pb-16 md:grid-cols-4">
-          {[['Free feed','Public posts, likes, follows'],['Premium','Locked drops + memberships'],['Customs','Paid photo/video requests'],['Safe by design','18+, report, block, moderation']].map(([title, body]) => (
-            <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"><h4 className="font-black">{title}</h4><p className="mt-2 text-sm text-zinc-400">{body}</p></div>
-          ))}
-        </section>
-      </section>
-    </main>
-  );
+export default function Home(){
+ const [session,setSession]=useState<Session|null>(null),[email,setEmail]=useState(''),[msg,setMsg]=useState('');
+ const [creators,setCreators]=useState<Creator[]>([]),[posts,setPosts]=useState<Post[]>([]),[selected,setSelected]=useState<Creator|null>(null);
+ const [requestText,setRequestText]=useState(''),[budget,setBudget]=useState('20'),[caption,setCaption]=useState(''),[file,setFile]=useState<File|null>(null);
+ const shown=useMemo(()=>creators.length?creators:demo,[creators]);
+ useEffect(()=>{supabase.auth.getSession().then(({data})=>setSession(data.session));const {data:s}=supabase.auth.onAuthStateChange((_e,v)=>setSession(v));load();return()=>s.subscription.unsubscribe()},[]);
+ async function load(){
+  const [{data:c},{data:p}]=await Promise.all([supabase.from('sfc_profiles').select('id,display_name,handle,city,bio,is_creator').eq('is_creator',true).limit(24),supabase.from('sfc_posts').select('*').eq('visibility','public').order('created_at',{ascending:false}).limit(30)]);
+  setCreators((c||[]) as Creator[]);setPosts((p||[]) as Post[]);
+ }
+ async function auth(e:FormEvent){e.preventDefault();setMsg('Sending secure sign-in link...');const {error}=await supabase.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname,data:{display_name:email.split('@')[0]}}});setMsg(error?error.message:'Check your email for the sign-in link.');}
+ async function becomeCreator(){if(!session)return setMsg('Sign in first.');const handle=`creator_${session.user.id.slice(0,8)}`;const {error}=await supabase.from('sfc_profiles').update({is_creator:true,age_verified:true,handle}).eq('id',session.user.id);setMsg(error?error.message:'Creator mode enabled.');load();}
+ async function sendRequest(){if(!session||!selected)return setMsg('Sign in and choose a creator first.');const cents=Math.round(Number(budget)*100);if(!requestText.trim()||cents<100)return setMsg('Add a request and at least $1 budget.');const {error}=await supabase.from('sfc_requests').insert({fan_id:session.user.id,creator_id:selected.id,request_text:requestText,budget_cents:cents});setMsg(error?error.message:'Request saved. Payment is not charged until processor approval.');if(!error){setRequestText('');setSelected(null)}}
+ async function uploadPost(){if(!session||!file)return setMsg('Sign in as a creator and choose a file.');const path=`${session.user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;setMsg('Uploading...');const {error:u}=await supabase.storage.from('sfc-media').upload(path,file);if(u)return setMsg(u.message);const {data}=supabase.storage.from('sfc-media').getPublicUrl(path);const {error}=await supabase.from('sfc_posts').insert({creator_id:session.user.id,caption,media_url:data.publicUrl,media_type:file.type.startsWith('video')?'video':'image',visibility:'public'});setMsg(error?error.message:'Post published.');if(!error){setCaption('');setFile(null);load()}}
+ async function reportCreator(c:Creator){if(!session)return setMsg('Sign in to report.');const reason=prompt('Reason for report?');if(!reason)return;const {error}=await supabase.from('sfc_reports').insert({reporter_id:session.user.id,creator_id:c.id,reason});setMsg(error?error.message:'Report submitted for review.');}
+ return <main className="min-h-screen bg-zinc-950 text-white"><section className="mx-auto max-w-6xl px-5 py-7">
+  <nav className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-5"><div><p className="text-xs uppercase tracking-[.35em] text-lime-300">Atlanta creator culture</p><h1 className="text-2xl font-black">SAG FOR CASH</h1></div><div className="flex items-center gap-3 text-sm">{session?<><span className="hidden text-zinc-400 sm:inline">{session.user.email}</span><button onClick={()=>supabase.auth.signOut()} className="rounded-full border border-white/20 px-4 py-2">Log out</button></>:<span className="text-zinc-400">18+ only</span>}</div></nav>
+  <section className="grid gap-8 py-12 md:grid-cols-[1.2fr_.8fr] md:items-start"><div><span className="rounded-full border border-lime-300/30 bg-lime-300/10 px-3 py-1 text-xs font-semibold text-lime-200">18+ CREATOR MARKETPLACE</span><h2 className="mt-5 text-5xl font-black leading-none md:text-7xl">Turn the look into a real creator hustle.</h2><p className="mt-5 max-w-2xl text-zinc-300">Profiles, public drops, premium-ready content, custom requests, reporting and creator tools built around streetwear culture.</p></div>
+   <div className="rounded-3xl border border-white/10 bg-zinc-900 p-5">{!session?<form onSubmit={auth}><h3 className="text-xl font-black">Join or sign in</h3><p className="mt-2 text-sm text-zinc-400">Email magic-link login. You must be 18+.</p><input required type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@email.com" className="mt-4 w-full rounded-xl border border-white/10 bg-black px-4 py-3 outline-none"/><button className="mt-3 w-full rounded-xl bg-lime-300 px-4 py-3 font-black text-black">Send sign-in link</button></form>:<><h3 className="text-xl font-black">Creator tools</h3><button onClick={becomeCreator} className="mt-3 w-full rounded-xl border border-lime-300/40 px-4 py-3 font-bold text-lime-200">Enable creator mode + 18+ attestation</button><input value={caption} onChange={e=>setCaption(e.target.value)} placeholder="Post caption" className="mt-3 w-full rounded-xl border border-white/10 bg-black px-4 py-3"/><input type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm" onChange={e=>setFile(e.target.files?.[0]||null)} className="mt-3 w-full text-sm text-zinc-400"/><button onClick={uploadPost} className="mt-3 w-full rounded-xl bg-lime-300 px-4 py-3 font-black text-black">Publish public drop</button></>}</div></section>
+  {msg&&<div className="mb-7 rounded-2xl border border-lime-300/20 bg-lime-300/5 p-4 text-sm text-lime-100">{msg}</div>}
+  <section className="pb-12"><div className="mb-5"><p className="text-sm uppercase tracking-[.3em] text-zinc-400">Discover</p><h3 className="text-3xl font-black">Atlanta creators</h3></div><div className="grid gap-4 md:grid-cols-3">{shown.map(c=><article key={c.id} className="rounded-3xl border border-white/10 bg-zinc-900 p-5"><div className="aspect-square rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-700"/><h4 className="mt-4 text-xl font-black">{c.display_name}</h4><p className="text-sm text-zinc-400">@{c.handle} • {c.city}</p><p className="mt-2 min-h-10 text-sm text-zinc-300">{c.bio||'Creator profile'}</p><div className="mt-4 grid grid-cols-2 gap-2"><button onClick={()=>setSelected(c)} className="rounded-xl bg-lime-300 px-3 py-2 text-sm font-bold text-black">Custom request</button><button onClick={()=>reportCreator(c)} className="rounded-xl border border-white/10 px-3 py-2 text-sm">Report</button></div></article>)}</div></section>
+  <section className="pb-14"><div className="mb-5"><p className="text-sm uppercase tracking-[.3em] text-zinc-400">Feed</p><h3 className="text-3xl font-black">Public drops</h3></div>{posts.length?<div className="grid gap-4 md:grid-cols-3">{posts.map(p=><article key={p.id} className="overflow-hidden rounded-3xl border border-white/10 bg-zinc-900">{p.media_url&&(p.media_type==='video'?<video controls src={p.media_url} className="aspect-square w-full object-cover"/>:<img src={p.media_url} alt={p.caption||'Creator post'} className="aspect-square w-full object-cover"/>)}<div className="p-4"><p className="text-sm text-zinc-200">{p.caption||'New drop'}</p><p className="mt-2 text-xs uppercase tracking-wider text-zinc-500">Public • verified backend</p></div></article>)}</div>:<div className="rounded-3xl border border-dashed border-white/15 p-10 text-center text-zinc-500">No public uploads yet. The pipeline is live and waiting on the first creator post.</div>}</section>
+  <section className="grid gap-4 pb-16 md:grid-cols-4">{[['Free feed','Public posts and creator discovery'],['Premium-ready','Schema supports locked content and pricing'],['Customs','Requests save securely before any charge'],['Safety','18+ gate, reporting, RLS and moderated media']].map(([a,b])=><div key={a} className="rounded-2xl border border-white/10 bg-white/[.03] p-5"><h4 className="font-black">{a}</h4><p className="mt-2 text-sm text-zinc-400">{b}</p></div>)}</section>
+  {selected&&<div className="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4"><div className="w-full max-w-lg rounded-3xl border border-white/10 bg-zinc-900 p-6"><div className="flex items-start justify-between"><div><p className="text-sm text-lime-300">CUSTOM REQUEST</p><h3 className="text-2xl font-black">{selected.display_name}</h3></div><button onClick={()=>setSelected(null)} className="text-zinc-400">✕</button></div><textarea value={requestText} onChange={e=>setRequestText(e.target.value)} placeholder="Describe the photo/video request. No illegal or sexual-service requests." className="mt-5 min-h-28 w-full rounded-xl border border-white/10 bg-black p-4"/><label className="mt-3 block text-sm text-zinc-400">Budget (USD)</label><input value={budget} onChange={e=>setBudget(e.target.value)} type="number" min="1" className="mt-1 w-full rounded-xl border border-white/10 bg-black px-4 py-3"/><button onClick={sendRequest} className="mt-4 w-full rounded-xl bg-lime-300 px-4 py-3 font-black text-black">Save request</button><p className="mt-3 text-xs text-zinc-500">No card is charged. Payments stay disabled until processor approval and compliance review are complete.</p></div></div>}
+ </section></main>
 }

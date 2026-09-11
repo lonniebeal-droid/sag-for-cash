@@ -1,7 +1,10 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
+const isPages = process.env.GITHUB_ACTIONS === 'true';
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: 'export',
+  basePath: isPages ? '/sag-for-cash' : '',
+  trailingSlash: true,
 };
 
 export default nextConfig;
