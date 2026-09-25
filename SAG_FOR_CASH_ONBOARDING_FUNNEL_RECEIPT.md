@@ -1,6 +1,6 @@
 # SAG FOR CASH — CREATOR ONBOARDING / FIRST-UPLOAD FUNNEL POLISH — VERIFICATION RECEIPT
 
-**Date:** 2026-09-25 (~04:20 UTC / 2026-09-25 ET)
+**Date:** 2026-09-25 (~04:15 UTC / 2026-09-25 ET)
 **Worker:** Vibe/GLM JU Completion Worker (JU Portfolio Finisher lane)
 **Project:** Sag for Cash (Atlanta creator marketplace) — repo `lonniebeal-droid/sag-for-cash`, live at https://lonniebeal-droid.github.io/sag-for-cash/
 **Claim status at start:** Previous claim (Grok, software-readiness milestone) RELEASED with this exact task offered as the optional next step: "agent-executable onboarding/first-upload funnel polish, otherwise claim next neglected unowned executable project." No active claim found; claimed by this worker; released at the end of this receipt.
@@ -22,12 +22,17 @@
 - Payments remain DISABLED; no charge path touched. Custom-request modal keeps "No card is charged. Payments stay disabled until processor approval and compliance review are complete."
 - 18+ gate unchanged. Identity/age verification remains pending (stated in UI). Reporting/moderation untouched.
 
-## FILES CHANGED / COMMITS
-- `src/app/page.tsx` only. Code commit `3807d6c0d826fd47c905643a8e7aacce0964e353`; this receipt commit on `main`.
+## FILES CHANGED / COMMITS (full history, including failures)
+- `3807d6c` — onboarding rewrite. **CI FAILED** (run #7): unclosed JSX fragment in the signed-in ternary (`：</>` else-fragment never closed). Honest record: the first push contained a syntax error.
+- `9e891e1d` — attempted fragment fix. **CI FAILED** (run #9): the fix was applied to content round-tripped through a web-text extraction pipeline, which corrupted the file (brace imbalance 139/138). Diagnostic lesson recorded: never round-trip source code through a text-extraction fetch before pushing.
+- `d30ae939` — verified-source re-push (exact intended file, brace/paren balance re-checked 139/139, 254/254 before push). **CI PASSED.**
+- `7c0dfe0b` — this receipt (earlier version; superseded by this version).
 
 ## TESTS / VERIFICATION
-- No local Node in this runtime (environmental gate — same gate recorded for JU Builder AI Round 5). Verification route used instead: GitHub Actions CI (`.github/workflows/pages.yml`) runs `npm ci && npm run build` (Next.js production build = full TypeScript typecheck + static export) and deploys to GitHub Pages on every push to main. CI evidence for commit 3807d6c0 recorded in the JU Master writeback for this milestone.
-- Functional behavior of all pre-existing flows (auth, follow/like, request, report, admin moderation) is unchanged by construction — same functions, same Supabase calls; only the creator panel JSX and profile logic were extended.
+- No local Node in this runtime (environmental gate). Verification route: GitHub Actions CI (`.github/workflows/pages.yml`) runs `npm ci && npm run build` (Next.js 16 production build = full TypeScript typecheck + static export) then deploys GitHub Pages.
+- **Run #10 (commit d30ae939): status completed, conclusion SUCCESS — build, typecheck, and "Deploy to GitHub Pages" job all passed.**
+- Live probe post-deploy: https://lonniebeal-droid.github.io/sag-for-cash/ serves the app (hero, discovery, feed sections render). The onboarding panel is client-only (renders when signed in), so the signed-out pre-render is expected to be unchanged between builds; the deployed artifact is run #10's build by construction (Pages deploy job within the successful run).
+- Functional behavior of all pre-existing flows (auth, follow/like, request, report, admin moderation) unchanged by construction — same functions, same Supabase calls.
 
 ## HUMAN GATES
 - None for this milestone (deploy is automated via the repo's own Pages workflow).
