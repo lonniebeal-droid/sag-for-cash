@@ -22,8 +22,8 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
-          NEXT_PUBLIC_SUPABASE_URL: https://ibtfjynffjspklnzyhfb.supabase.co
-          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_RgBVLWF4QV7b_HUVc2JKZQ_6mAy8LUh
+          NEXT_PUBLIC_SUPABASE_URL: https://qyumemnmuuuieffycrsk.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_fOIADiz08nxNYSEZNbLABQ_eKlBzKm_
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
