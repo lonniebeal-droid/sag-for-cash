@@ -30,9 +30,19 @@ Atlanta creator marketplace MVP built around streetwear / sagging culture.
 ## Local run
 ```bash
 npm install
+cp .env.example .env.local
+# fill NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+npm test
 npm run dev
 ```
 Open http://localhost:3000
+
+`npm test` does not need real credentials. `npm run build` prerenders without them. A hosted deploy still needs those two public variables set in the host (never a service-role key). This repo does not turn payments on.
+
+## Deploy (staged, not executed)
+1. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` on the host.
+2. `npm test` then `npm run build`.
+3. Deploy only after Ju approves that specific release. Payments stay off.
 
 ## Exact next executable tasks
 1. Confirm GitHub Pages continues to serve the discovery UI (already live).
