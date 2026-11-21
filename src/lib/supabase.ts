@@ -2,7 +2,22 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 let cached: SupabaseClient | null = null;
 
-export function publicSupabaseEnv(env: NodeJS.ProcessEnv = process.env) {
+// Next.js only inlines NEXT_PUBLIC_* into the client bundle when referenced
+// literally as process.env.NAME. Reading them through a parameter leaves them
+// undefined in the browser (static export crashed on load).
+type PublicEnv = {
+  NEXT_PUBLIC_SUPABASE_URL?: string;
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?: string;
+};
+
+function buildEnv(): PublicEnv {
+  return {
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  };
+}
+
+export function publicSupabaseEnv(env: PublicEnv = buildEnv()) {
   const url = env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const key = env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim();
   if (!url || !key) {
